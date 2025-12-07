@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PES Hospital Management System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --light: #f3f4f6;
+            --white: #ffffff;
+            --dark: #1f2937;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        .login-page {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 40px;
+            font-size: 3em;
+        }
+
+        .login-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .login-box {
+            background: var(--light);
+            padding: 30px;
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .login-box:hover { transform: translateY(-5px); }
+
+        .login-box h2 {
+            color: var(--dark);
+            margin-bottom: 10px;
+            font-size: 1.8em;
+        }
+
+        .login-box p {
+            color: #6b7280;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1em;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .message {
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .message.show { display: block; }
+        .message.success { background: #d1fae5; color: #065f46; }
+        .message.error { background: #fee2e2; color: #991b1b; }
+
+        .dashboard {
+            display: none;
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .dashboard.active { display: block; }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid var(--light);
+        }
+
+        .dashboard-header h2 {
+            color: var(--primary);
+            font-size: 2.5em;
+        }
+
+        .logout-btn {
+            width: auto !important;
+            padding: 12px 30px !important;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            width: auto !important;
+            padding: 12px 24px !important;
+            background: var(--light);
+            color: var(--dark);
+            border: 2px solid transparent;
+        }
+
+        .tab-btn:hover, .tab-btn.active {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .card {
+            background: var(--light);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--white);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background: var(--primary);
+            color: var(--white);
+            padding: 15px;
+            text-align: left;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid var(--light);
+        }
+
+        tr:hover { background: var(--light); }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6b7280;
+        }
+
+        .chatbot-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 70px;
+            height: 70px;
+            background: var(--primary);
+            color: var(--white);
+            border: none;
+            border-radius: 50%;
+            font-size: 2em;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+        }
+
+        .chatbot-btn.show { display: block; }
+        .chatbot-btn:hover { transform: scale(1.1); }
+
+        .chatbot-window {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 400px;
+            height: 600px;
+            background: var(--white);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+            z-index: 1001;
+        }
+
+        .chatbot-window.show { display: flex; }
+
+        .chatbot-header {
+            background: var(--primary);
+            color: var(--white);
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chatbot-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f9fafb;
+        }
+
+        .chat-msg {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .chat-msg.user {
+            background: var(--primary);
+            color: var(--white);
+            margin-left: auto;
+        }
+
+        .chat-msg.bot {
+            background: var(--white);
+            color: var(--dark);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .chatbot-input {
+            padding: 20px;
+            border-top: 2px solid var(--light);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-row { display: flex; gap: 10px; }
+
+        .icon-btn {
+            width: auto !important;
+            padding: 12px 16px !important;
+            font-size: 1.2em;
+        }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 768px) {
+            .dashboard-header { flex-direction: column; gap: 20px; }
+            .tabs { flex-direction: column; }
+            .tab-btn { width: 100% !important; }
+            .chatbot-window { width: 100%; height: 100%; bottom: 0; right: 0; border-radius: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Page -->
+        <div id="login-page" class="login-page">
+            <h1>🏥 PES Hospital</h1>
+            
+            <div class="login-grid">
+                <div class="login-box">
+                    <h2>👤 Patient</h2>
+                    <p>Username: patient1 | Password: patient123</p>
+                    <div id="patient-msg" class="message"></div>
+                    <form onsubmit="login(event, 'patient')">
+                        <input type="text" placeholder="Username" required>
+                        <input type="password" placeholder="Password" required>
+                        <button type="submit">Login</button>
+                    </form>
+                </div>
+
+                <div class="login-box">
+                    <h2>👨‍⚕️ Doctor</h2>
+                    <p>Username: doctor1 | Password: doctor123</p>
+                    <div id="doctor-msg" class="message"></div>
+                    <form onsubmit="login(event, 'doctor')">
+                        <input type="text" placeholder="Username" required>
+                        <input type="password" placeholder="Password" required>
+                        <button type="submit">Login</button>
+                    </form>
+                </div>
+
+                <div class="login-box">
+                    <h2>👨‍⚕️ Staff</h2>
+                    <p>Username: nurse1 | Password: nurse123</p>
+                    <div id="staff-msg" class="message"></div>
+                    <form onsubmit="login(event, 'staff')">
+                        <input type="text" placeholder="Username" required>
+                        <input type="password" placeholder="Password" required>
+                        <button type="submit">Login</button>
+                    </form>
+                </div>
+
+                <div class="login-box">
+                    <h2>⚙️ Admin</h2>
+                    <p>Username: admin | Password: admin123</p>
+                    <div id="admin-msg" class="message"></div>
+                    <form onsubmit="login(event, 'admin')">
+                        <input type="text" placeholder="Username" required>
+                        <input type="password" placeholder="Password" required>
+                        <button type="submit">Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Patient Dashboard -->
+        <div id="patient-dashboard" class="dashboard">
+            <div class="dashboard-header">
+                <h2>👤 Patient Dashboard</h2>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('patient', 'records')">Medical Records</button>
+                <button class="tab-btn" onclick="showTab('patient', 'profile')">My Profile</button>
+            </div>
+
+            <div id="patient-records" class="tab-content active">
+                <div class="card">
+                    <h3>📋 Your Medical Records</h3>
+                    <div id="records-data" class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <div id="patient-profile" class="tab-content">
+                <div class="card">
+                    <h3>👤 My Profile</h3>
+                    <div id="profile-data" class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Doctor Dashboard -->
+        <div id="doctor-dashboard" class="dashboard">
+            <div class="dashboard-header">
+                <h2>👨‍⚕️ Doctor Dashboard</h2>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('doctor', 'stats')">Statistics</button>
+                <button class="tab-btn" onclick="showTab('doctor', 'patients')">My Patients</button>
+                <button class="tab-btn" onclick="showTab('doctor', 'nurses')">Contact Nurse</button>
+            </div>
+
+            <div id="doctor-stats" class="tab-content active">
+                <div class="card">
+                    <h3>📊 Monthly Statistics</h3>
+                    <div id="stats-data" class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <div id="doctor-patients" class="tab-content">
+                <div class="card">
+                    <h3>👥 My Patients</h3>
+                    <div id="patients-data" class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <div id="doctor-nurses" class="tab-content">
+                <div class="card">
+                    <h3>👨‍⚕️ Available Nurses</h3>
+                    <div id="nurses-data" class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Staff Dashboard -->
+        <div id="staff-dashboard" class="dashboard">
+            <div class="dashboard-header">
+                <h2>👨‍⚕️ Staff Dashboard</h2>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('staff', 'profile')">My Profile</button>
+            </div>
+
+            <div id="staff-profile" class="tab-content active">
+                <div class="card">
+                    <h3>👤 My Profile</h3>
+                    <div id="staff-profile-data" class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="admin-dashboard" class="dashboard">
+            <div class="dashboard-header">
+                <h2>⚙️ Admin Dashboard</h2>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('admin', 'finances')">Finances</button>
+                <button class="tab-btn" onclick="showTab('admin', 'pharmacy')">Pharmacy</button>
+            </div>
+
+            <div id="admin-finances" class="tab-content active">
+                <div class="card">
+                    <h3>💰 Financial Overview</h3>
+                    <div id="finances-data" class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <div id="admin-pharmacy" class="tab-content">
+                <div class="card">
+                    <h3>💊 Pharmacy Inventory</h3>
+                    <div id="pharmacy-data" class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chatbot -->
+    <button class="chatbot-btn" id="chatbot-btn" onclick="toggleChatbot()">💬</button>
+
+    <div class="chatbot-window" id="chatbot-window">
+        <div class="chatbot-header">
+            <h3>🤖 Virtual Assistant</h3>
+            <button class="icon-btn" onclick="toggleChatbot()">✕</button>
+        </div>
+        <div class="chatbot-messages" id="chatbot-messages">
+            <div class="chat-msg bot">Hello! I'm your virtual healthcare assistant. How can I help you today?</div>
+        </div>
+        <div class="chatbot-input">
+            <select id="chat-language">
+                <option value="english">English</option>
+                <option value="hindi">हिंदी</option>
+                <option value="kannada">ಕನ್ನಡ</option>
+            </select>
+            <div class="input-row">
+                <input type="text" id="chat-input" placeholder="Type your message...">
+                <button class="icon-btn" onclick="sendChat()">📤</button>
+                <button class="icon-btn" onclick="voiceInput()">🎤</button>
+                <button class="icon-btn" onclick="voiceOutput()">🔊</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+        let currentDashboard = null;
+
+        async function login(event, userType) {
+            event.preventDefault();
+            const form = event.target;
+            const username = form.querySelector('input[type="text"]').value;
+            const password = form.querySelector('input[type="password"]').value;
+            const msgDiv = document.getElementById(userType + '-msg');
+
+            try {
+                const response = await fetch(API_URL + '/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    credentials: 'include',
+                    body: JSON.stringify({username, password, user_type: userType})
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    msgDiv.textContent = '✅ Login successful!';
+                    msgDiv.className = 'message success show';
+
+                    setTimeout(() => {
+                        document.getElementById('login-page').classList.add('hidden');
+                        document.getElementById(userType + '-dashboard').classList.add('active');
+                        document.getElementById('chatbot-btn').classList.add('show');
+                        currentDashboard = userType;
+                        loadDashboardData(userType);
+                    }, 1000);
+                } else {
+                    msgDiv.textContent = '❌ ' + data.message;
+                    msgDiv.className = 'message error show';
+                }
+            } catch (error) {
+                msgDiv.textContent = '❌ Connection error';
+                msgDiv.className = 'message error show';
+            }
+        }
+
+        async function loadDashboardData(userType) {
+            if (userType === 'patient') {
+                await loadPatientRecords();
+                await loadPatientProfile();
+            } else if (userType === 'doctor') {
+                await loadDoctorStats();
+                await loadDoctorPatients();
+                await loadNurses();
+            } else if (userType === 'staff') {
+                await loadStaffProfile();
+            } else if (userType === 'admin') {
+                await loadFinances();
+                await loadPharmacy();
+            }
+        }
+
+        async function loadPatientRecords() {
+            try {
+                const response = await fetch(API_URL + '/patient_records', {credentials: 'include'});
+                const data = await response.json();
+                
+                const div = document.getElementById('records-data');
+                if (data.success && data.records.length > 0) {
+                    div.innerHTML = '<table><tr><th>Date</th><th>Doctor</th><th>Diagnosis</th><th>Prescription</th></tr>' +
+                        data.records.map(r => `<tr>
+                            <td>${new Date(r.treatment_date).toLocaleDateString()}</td>
+                            <td>${r.doctor_name} (${r.specialization})</td>
+                            <td>${r.diagnosis}</td>
+                            <td>${r.prescription}</td>
+                        </tr>`).join('') + '</table>';
+                } else {
+                    div.innerHTML = '<p>No medical records found.</p>';
+                }
+            } catch (error) {
+                document.getElementById('records-data').innerHTML = '<p>Error loading records.</p>';
+            }
+        }
+
+        async function loadPatientProfile() {
+            try {
+                const response = await fetch(API_URL + '/patient_profile', {credentials: 'include'});
+                const data = await response.json();
+                
+                const div = document.getElementById('profile-data');
+                if (data.success && data.profile) {
+                    const p = data.profile;
+                    div.innerHTML = `
+                        <p><strong>Name:</strong> ${p.full_name || 'N/A'}</p>
+                        <p><strong>Email:</strong> ${p.email || 'N/A'}</p>
+                        <p><strong>Phone:</strong> ${p.phone || 'N/A'}</p>
+                        <p><strong>Blood Group:</strong> ${p.blood_group || 'N/A'}</p>
+                    `;
+                } else {
+                    div.innerHTML = '<p>Profile not found.</p>';
+                }
+            } catch (error) {
+                document.getElementById('profile-data').innerHTML = '<p>Error loading profile.</p>';
+            }
+        }
+
+        async function loadDoctorStats() {
+            try {
+                const response = await fetch(API_URL + '/doctor_stats', {credentials: 'include'});
+                const data = await response.json();
+                
+                const div = document.getElementById('stats-data');
+                if (data.success && data.stats.length > 0) {
+                    div.innerHTML = '<table><tr><th>Month</th><th>Patients Treated</th></tr>' +
+                        data.stats.map(s => `<tr><td>${s.month}</td><td>${s.patient_count}</td></tr>`).join('') + '</table>';
+                } else {
+                    div.innerHTML = '<p>No statistics available.</p>';
+                }
+            } catch (error) {
+                document.getElementById('stats-data').innerHTML = '<p>Error loading statistics.</p>';
+            }
+        }
+
+        async function loadDoctorPatients() {
+            try {
+                const response = await fetch(API_URL + '/doctor_patients', {credentials: 'include'});
+                const data = await response.json();
+                
+                const div = document.getElementById('patients-data');
+                if (data.success && data.patients.length > 0) {
+                    div.innerHTML = '<table><tr><th>Name</th><th>Email</th><th>Phone</th><th>Last Visit</th></tr>' +
+                        data.patients.map(p => `<tr>
+                            <td>${p.full_name}</td>
+                            <td>${p.email || 'N/A'}</td>
+                            <td>${p.phone || 'N/A'}</td>
+                            <td>${new Date(p.last_visit).toLocaleDateString()}</td>
+                        </tr>`).join('') + '</table>';
+                } else {
+                    div.innerHTML = '<p>No patients found.</p>';
+                }
+            } catch (error) {
+                document.getElementById('patients-data').innerHTML = '<p>Error loading patients.</p>';
+            }
+        }
+
+        async function loadNurses() {
+            try {
+                const response = await fetch(API_URL + '/available_nurses', {credentials: 'include'});
+                const data = await response.json();
+                
+                const div = document.getElementById('nurses-data');
+                if (data.success && data.nurses.length > 0) {
+                    div.innerHTML = '<table><tr><th>Name</th><th>Department</th><th>Shift</th><th>Contact</th></tr>' +
+                        data.nurses.map(n => `<tr>
+                            <td>${n.full_name}</td>
+                            <td>${n.department}</td>
+                            <td>${n.shift_timing}</td>
+                            <td>${n.phone || 'N/A'}</td>
+                        </tr>`).join('') + '</table>';
+                } else {
+                    div.innerHTML = '<p>No nurses available.</p>';
+                }
+            } catch (error) {
+                document.getElementById('nurses-data').innerHTML = '<p>Error loading nurses.</p>';
+            }
+        }
+
+        async function loadStaffProfile() {
+            try {
+                const response = await fetch(API_URL + '/staff_profile', {credentials: 'include'});
+                const data = await response.json();
+                
+                const div = document.getElementById('staff-profile-data');
+                if (data.success && data.profile) {
+                    const p = data.profile;
+                    div.innerHTML = `
+                        <p><strong>Name:</strong> ${p.full_name}</p>
+                        <p><strong>Position:</strong> ${p.position}</p>
+                        <p><strong>Department:</strong> ${p.department}</p>
+                        <p><strong>Shift:</strong> ${p.shift_timing}</p>
+                        <p><strong>Salary:</strong> ₹${p.salary}</p>
+                    `;
+                } else {
+                    div.innerHTML = '<p>Profile not found.</p>';
+                }
+            } catch (error) {
+                document.getElementById('staff-profile-data').innerHTML = '<p>Error loading profile.</p>';
+            }
+        }
+
+        async function loadFinances() {
+            try {
+                const response = await fetch(API_URL + '/admin_finances', {credentials: 'include'});
+                const data = await response.json();
+                
+                const div = document.getElementById('finances-data');
+                if (data.success) {
+                    let html = '<h4>Financial Summary</h4>';
+                    data.summary.forEach(s => {
+                        html += `<p style="font-size: 1.2em; margin: 10px 0;"><strong>${s.transaction_type.toUpperCase()}:</strong> ₹${s.total}</p>`;
+                    });
+                    html += '<h4 style="margin-top: 30px;">Staff Salaries</h4>';
+                    html += '<table><tr><th>Name</th><th>Position</th><th>Salary</th></tr>';
+                    data.salaries.forEach(s => {
+                        html += `<tr><td>${s.full_name}</td><td>${s.position}</td><td>₹${s.salary}</td></tr>`;
+                    });
+                    html += '</table>';
+                    div.innerHTML = html;
+                } else {
+                    div.innerHTML = '<p>No financial data available.</p>';
+                }
+            } catch (error) {
+                document.getElementById('finances-data').innerHTML = '<p>Error loading finances.</p>';
+            }
+        }
+
+        async function loadPharmacy() {
+            try {
+                const response = await fetch(API_URL + '/pharmacy', {credentials: 'include'});
+                const data = await response.json();
+                
+                const div = document.getElementById('pharmacy-data');
+                if (data.success && data.inventory.length > 0) {
+                    div.innerHTML = '<table><tr><th>Drug Name</th><th>Category</th><th>Stock</th><th>Price</th><th>Expiry</th></tr>' +
+                        data.inventory.map(i => `<tr>
+                            <td>${i.drug_name}</td>
+                            <td>${i.category}</td>
+                            <td>${i.quantity_in_stock}</td>
+                            <td>₹${i.unit_price}</td>
+                            <td>${new Date(i.expiry_date).toLocaleDateString()}</td>
+                        </tr>`).join('') + '</table>';
+                } else {
+                    div.innerHTML = '<p>No pharmacy items found.</p>';
+                }
+            } catch (error) {
+                document.getElementById('pharmacy-data').innerHTML = '<p>Error loading pharmacy.</p>';
+            }
+        }
+
+        function showTab(dashboard, tabName) {
+            const tabs = document.querySelectorAll(`#${dashboard}-dashboard .tab-btn`);
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const contents = document.querySelectorAll(`#${dashboard}-dashboard .tab-content`);
+            contents.forEach(content => content.classList.remove('active'));
+            document.getElementById(`${dashboard}-${tabName}`).classList.add('active');
+        }
+
+        function logout() {
+            fetch(API_URL + '/logout', {credentials: 'include'}).then(() => {
+                document.querySelectorAll('.dashboard').forEach(d => d.classList.remove('active'));
+                document.getElementById('login-page').classList.remove('hidden');
+                document.getElementById('chatbot-btn').classList.remove('show');
+                document.getElementById('chatbot-window').classList.remove('show');
+                document.querySelectorAll('input').forEach(i => i.value = '');
+                document.querySelectorAll('.message').forEach(m => m.className = 'message');
+                currentDashboard = null;
+            });
+        }
+
+        function toggleChatbot() {
+            document.getElementById('chatbot-window').classList.toggle('show');
+        }
+
+        async function sendChat() {
+            const input = document.getElementById('chat-input');
+            const language = document.getElementById('chat-language').value;
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            const messagesDiv = document.getElementById('chatbot-messages');
+
+            const userMsg = document.createElement('div');
+            userMsg.className = 'chat-msg user';
+            userMsg.textContent = message;
+            messagesDiv.appendChild(userMsg);
+
+            input.value = '';
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            try {
+                const response = await fetch(API_URL + '/chatbot', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message, language})
+                });
+
+                const data = await response.json();
+
+                const botMsg = document.createElement('div');
+                botMsg.className = 'chat-msg bot';
+                botMsg.textContent = data.success ? data.response : 'Sorry, I encountered an error.';
+                messagesDiv.appendChild(botMsg);
+
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            } catch (error) {
+                const botMsg = document.createElement('div');
+                botMsg.className = 'chat-msg bot';
+                botMsg.textContent = 'Connection error. Please try again.';
+                messagesDiv.appendChild(botMsg);
+            }
+        }
+
+        function voiceInput() {
+            if ('webkitSpeechRecognition' in window) {
+                const recognition = new webkitSpeechRecognition();
+                const language = document.getElementById('chat-language').value;
+                recognition.lang = language === 'hindi' ? 'hi-IN' : language === 'kannada' ? 'kn-IN' : 'en-US';
+                recognition.onresult = (event) => {
+                    document.getElementById('chat-input').value = event.results[0][0].transcript;
+                };
+                recognition.start();
+            } else {
+                alert('Voice input not supported. Please use Chrome.');
+            }
+        }
+
+        function voiceOutput() {
+            const messages = document.querySelectorAll('.chat-msg.bot');
+            if (messages.length === 0) return;
+            
+            const lastMessage = messages[messages.length - 1].textContent;
+            const speech = new SpeechSynthesisUtterance(lastMessage);
+            const language = document.getElementById('chat-language').value;
+            speech.lang = language === 'hindi' ? 'hi-IN' : language === 'kannada' ? 'kn-IN' : 'en-US';
+            speechSynthesis.speak(speech);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatInput = document.getElementById('chat-input');
+            if (chatInput) {
+                chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') sendChat();
+                });
+            }
+        });
+    </script>
+</body>
+</html>
