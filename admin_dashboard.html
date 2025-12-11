@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-layout">
+    <aside class="sidebar">
+        <a href="{{ url_for('admin_dashboard', tab='finances') }}" class="nav-link {% if active_tab=='finances' %}active{% endif %}">Finances</a>
+        <a href="{{ url_for('admin_dashboard', tab='inventory') }}" class="nav-link {% if active_tab=='inventory' %}active{% endif %}">Pharmacy Inventory</a>
+        <a href="{{ url_for('admin_dashboard', tab='salaries') }}" class="nav-link {% if active_tab=='salaries' %}active{% endif %}">Employee Salaries</a>
+    </aside>
+    <section class="content">
+        {% if active_tab == 'finances' %}
+            <div class="card">
+                <h2>Hospital Finances</h2>
+                <h3>Revenue by Month</h3>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Total Revenue (₹)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for row in revenue_by_month %}
+                        <tr>
+                            <td>{{ row.month_year }}</td>
+                            <td>{{ '%.2f'|format(row.total_revenue) }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                <h3>All Bills</h3>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Patient</th>
+                        <th>Amount</th>
+                        <th>Mode</th>
+                        <th>Insurance</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for bill in bills %}
+                        <tr>
+                            <td>{{ bill.created_at }}</td>
+                            <td>{{ bill.patient_name }}</td>
+                            <td>₹{{ '%.2f'|format(bill.total_amount) }}</td>
+                            <td>{{ bill.payment_mode|capitalize }}</td>
+                            <td>{{ 'Yes' if bill.insurance_claimed else 'No' }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% elif active_tab == 'inventory' %}
+            <div class="card">
+                <h2>Pharmacy Inventory</h2>
+                <p class="subtitle">Admin can update inventory via phpMyAdmin or extend this screen later.</p>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Drug</th>
+                        <th>Units Available</th>
+                        <th>Unit Price (₹)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in inventory %}
+                        <tr>
+                            <td>{{ item.drug_name }}</td>
+                            <td>{{ item.units_available }}</td>
+                            <td>{{ '%.2f'|format(item.unit_price) }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% elif active_tab == 'salaries' %}
+            <div class="card">
+                <h2>Employee Salaries</h2>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Role</th>
+                        <th>Month</th>
+                        <th>Amount (₹)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for row in salaries %}
+                        <tr>
+                            <td>{{ row.full_name }}</td>
+                            <td>{{ row.role|capitalize }}</td>
+                            <td>{{ row.month_year }}</td>
+                            <td>{{ '%.2f'|format(row.amount) }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

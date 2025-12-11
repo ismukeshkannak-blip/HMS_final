@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-layout">
+    <aside class="sidebar">
+        <a href="{{ url_for('patient_dashboard', tab='profile') }}" class="nav-link {% if active_tab=='profile' %}active{% endif %}">Profile</a>
+        <a href="{{ url_for('patient_dashboard', tab='records') }}" class="nav-link {% if active_tab=='records' %}active{% endif %}">Medical Records</a>
+        <a href="{{ url_for('patient_dashboard', tab='billing') }}" class="nav-link {% if active_tab=='billing' %}active{% endif %}">Billing</a>
+        <a href="{{ url_for('patient_dashboard', tab='chat') }}" class="nav-link {% if active_tab=='chat' %}active{% endif %}">Chat with Doctor</a>
+        <a href="{{ url_for('patient_dashboard', tab='assistant') }}" class="nav-link {% if active_tab=='assistant' %}active{% endif %}">Virtual Assistant 🤖</a>
+    </aside>
+    <section class="content">
+        {% if active_tab == 'profile' %}
+            <div class="card">
+                <h2>Patient Profile</h2>
+                <div class="grid-2">
+                    <div><strong>Name:</strong> {{ patient.full_name }}</div>
+                    <div><strong>DOB:</strong> {{ patient.dob }}</div>
+                    <div><strong>Gender:</strong> {{ patient.gender }}</div>
+                    <div><strong>Phone:</strong> {{ patient.phone }}</div>
+                    <div><strong>Address:</strong> {{ patient.address }}</div>
+                    <div><strong>Insurance:</strong> {{ patient.insurance_provider }} ({{ patient.insurance_id }})</div>
+                </div>
+            </div>
+        {% elif active_tab == 'records' %}
+            <div class="card">
+                <h2>Medical Records</h2>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Doctor</th>
+                        <th>Diagnosis</th>
+                        <th>Treatment</th>
+                        <th>Prescription</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for rec in records %}
+                        <tr>
+                            <td>{{ rec.visit_date }}</td>
+                            <td>{{ rec.doctor_name }}</td>
+                            <td>{{ rec.diagnosis }}</td>
+                            <td>{{ rec.treatment }}</td>
+                            <td>{{ rec.prescription }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% elif active_tab == 'billing' %}
+            <div class="card">
+                <h2>Billing History</h2>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Payment Mode</th>
+                        <th>Insurance Claimed</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for bill in bills %}
+                        <tr>
+                            <td>{{ bill.created_at }}</td>
+                            <td>₹{{ '%.2f'|format(bill.total_amount) }}</td>
+                            <td>{{ bill.payment_mode|capitalize }}</td>
+                            <td>{{ 'Yes' if bill.insurance_claimed else 'No' }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% elif active_tab == 'chat' %}
+            <div class="card chat-card">
+                <h2>Chat with Doctor</h2>
+                {% if doctor %}
+                    <p class="subtitle">You are connected with <strong>{{ doctor.full_name }}</strong> ({{ doctor.specialization }}).</p>
+                    <div id="chat-window" class="chat-window">
+                        {% for msg in messages %}
+                            <div class="chat-message {% if msg.sender_user_id == session.get('user_id') %}me{% else %}them{% endif %}">
+                                <div class="meta">
+                                    <span class="sender">
+                                        {% if msg.sender_user_id == session.get('user_id') %}You{% else %}Doctor{% endif %}
+                                    </span>
+                                    <span class="time">{{ msg.sent_at }}</span>
+                                </div>
+                                <div class="bubble">{{ msg.content }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <form method="post" action="{{ url_for('patient_send_message') }}" class="chat-input">
+                        <input type="text" name="content" placeholder="Type your message..." required>
+                        <button class="btn btn-primary" type="submit">Send</button>
+                    </form>
+                {% else %}
+                    <p>No doctor found yet. Once you have a medical record, your primary doctor will appear here.</p>
+                {% endif %}
+            </div>
+        {% elif active_tab == 'assistant' %}
+            <div class="card chat-card">
+                <h2>Virtual Health Assistant 🤖</h2>
+                <p class="subtitle">
+                    Ask quick questions about your reports, preparations before tests, or general hospital processes.
+                    This assistant does <strong>not</strong> replace your doctor.
+                </p>
+                <div id="assistant-window" class="chat-window"></div>
+                <div class="chat-input">
+                    <input type="text" id="assistant-input" placeholder="Ask a question..." />
+                    <button class="btn btn-primary" id="assistant-send">Ask</button>
+                </div>
+                <div id="assistant-error" class="alert alert-error" style="display:none;"></div>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if active_tab == 'assistant' %}
+<script>
+document.getElementById('assistant-send').addEventListener('click', function() {
+    const input = document.getElementById('assistant-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+    const windowEl = document.getElementById('assistant-window');
+    const errEl = document.getElementById('assistant-error');
+    errEl.style.display = 'none';
+
+    const userBubble = document.createElement('div');
+    userBubble.className = 'chat-message me';
+    userBubble.innerHTML = '<div class="meta"><span class="sender">You</span></div><div class="bubble"></div>';
+    userBubble.querySelector('.bubble').textContent = msg;
+    windowEl.appendChild(userBubble);
+    windowEl.scrollTop = windowEl.scrollHeight;
+    input.value = '';
+
+    fetch('{{ url_for("patient_assistant_api") }}', {
+        method: 'POST',
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({message: msg})
+    }).then(r => r.json()).then(data => {
+        if (data.error) {
+            errEl.textContent = data.error;
+            errEl.style.display = 'block';
+            return;
+        }
+        const botBubble = document.createElement('div');
+        botBubble.className = 'chat-message them';
+        botBubble.innerHTML = '<div class="meta"><span class="sender">Assistant</span></div><div class="bubble"></div>';
+        botBubble.querySelector('.bubble').textContent = data.reply;
+        windowEl.appendChild(botBubble);
+        windowEl.scrollTop = windowEl.scrollHeight;
+    }).catch(err => {
+        errEl.textContent = 'Something went wrong. Please try again.';
+        errEl.style.display = 'block';
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

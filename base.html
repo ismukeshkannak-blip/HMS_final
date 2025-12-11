@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title or "Hospital Management System" }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<header class="topbar">
+    <div class="topbar-left">
+        <div class="logo">🏥 PES Univeristy Hospital</div>
+        {% if session.get('role') %}
+        <div class="role-pill">{{ session.get('role')|capitalize }} Portal</div>
+        {% endif %}
+    </div>
+    <nav class="topbar-nav">
+        {% if session.get('user_id') %}
+            <span class="user-chip">Logged in as {{ session.get('username') }}</span>
+            <a href="{{ url_for('logout') }}" class="btn btn-ghost">Logout</a>
+        {% endif %}
+    </nav>
+</header>
+
+<main class="layout">
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+    <span>CarePlus HMS &copy; {{ 2025 }}</span>
+</footer>
+
+<script src="{{ url_for('static', filename='main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

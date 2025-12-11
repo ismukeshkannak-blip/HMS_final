@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-layout">
+    <aside class="sidebar">
+        <a href="{{ url_for('doctor_dashboard', tab='profile') }}" class="nav-link {% if active_tab=='profile' %}active{% endif %}">Profile</a>
+        <a href="{{ url_for('doctor_dashboard', tab='stats') }}" class="nav-link {% if active_tab=='stats' %}active{% endif %}">Patient Statistics</a>
+        <a href="{{ url_for('doctor_dashboard', tab='chat') }}" class="nav-link {% if active_tab=='chat' %}active{% endif %}">Patient Chats</a>
+        <a href="{{ url_for('doctor_dashboard', tab='nurses') }}" class="nav-link {% if active_tab=='nurses' %}active{% endif %}">Nurse Availability</a>
+    </aside>
+    <section class="content">
+        {% if active_tab == 'profile' %}
+            <div class="card">
+                <h2>Doctor Profile</h2>
+                <div class="grid-2">
+                    <div><strong>Name:</strong> {{ doctor.full_name }}</div>
+                    <div><strong>Designation:</strong> {{ doctor.designation }}</div>
+                    <div><strong>Qualification:</strong> {{ doctor.qualification }}</div>
+                    <div><strong>Specialisation:</strong> {{ doctor.specialization }}</div>
+                    <div><strong>Experience:</strong> {{ doctor.years_experience }} years</div>
+                    <div><strong>Phone:</strong> {{ doctor.phone }}</div>
+                    <div><strong>Email:</strong> {{ doctor.email }}</div>
+                </div>
+            </div>
+        {% elif active_tab == 'stats' %}
+            <div class="card">
+                <h2>Patient Statistics</h2>
+                <form method="get" class="inline-form">
+                    <input type="hidden" name="tab" value="stats">
+                    <label>Select month:
+                        <select name="month">
+                            {% for item in stats_by_month %}
+                                <option value="{{ item.month_year }}" {% if item.month_year == selected_month %}selected{% endif %}>
+                                    {{ item.month_year }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <button class="btn btn-primary" type="submit">View</button>
+                </form>
+                <div class="stats-panel">
+                    {% if selected_stats %}
+                        <p>Patients treated in <strong>{{ selected_month }}</strong>:
+                            <strong>{{ selected_stats.patient_count }}</strong>
+                        </p>
+                    {% else %}
+                        <p>No data found for selected month.</p>
+                    {% endif %}
+                </div>
+                <h3>All Months Overview</h3>
+                <table class="table">
+                    <thead>
+                    <tr><th>Month</th><th>Patients treated</th></tr>
+                    </thead>
+                    <tbody>
+                    {% for item in stats_by_month %}
+                        <tr>
+                            <td>{{ item.month_year }}</td>
+                            <td>{{ item.patient_count }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% elif active_tab == 'chat' %}
+            <div class="card chat-card">
+                <h2>Patient Chats</h2>
+                <p class="subtitle">Select a patient to view and reply to messages.</p>
+                <div class="grid-2">
+                    <div>
+                        <h3>Your Patients</h3>
+                        <ul class="list">
+                            {% for p in patients %}
+                                <li>
+                                    <a href="{{ url_for('doctor_dashboard', tab='chat', patient_id=p.id) }}"
+                                       class="badge {% if selected_patient and selected_patient.id == p.id %}badge-primary{% endif %}">
+                                        {{ p.full_name }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div>
+                        {% if selected_patient %}
+                            <h3>Chat with {{ selected_patient.full_name }}</h3>
+                            <div class="chat-window">
+                                {% for msg in messages %}
+                                    <div class="chat-message {% if msg.sender_user_id == session.get('user_id') %}me{% else %}them{% endif %}">
+                                        <div class="meta">
+                                            <span class="sender">
+                                                {% if msg.sender_user_id == session.get('user_id') %}You{% else %}Patient{% endif %}
+                                            </span>
+                                            <span class="time">{{ msg.sent_at }}</span>
+                                        </div>
+                                        <div class="bubble">{{ msg.content }}</div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <form method="post" action="{{ url_for('doctor_send_message', patient_id=selected_patient.id) }}" class="chat-input">
+                                <input type="text" name="content" placeholder="Type your reply..." required>
+                                <button class="btn btn-primary" type="submit">Send</button>
+                            </form>
+                        {% else %}
+                            <p>Select a patient to view messages.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% elif active_tab == 'nurses' %}
+            <div class="card">
+                <h2>Nurse Availability</h2>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Phone</th>
+                        <th>Available</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for n in nurses %}
+                        <tr>
+                            <td>{{ n.full_name }}</td>
+                            <td>{{ n.department }}</td>
+                            <td>{{ n.phone }}</td>
+                            <td>
+                                {% if n.is_available %}
+                                    <span class="badge badge-success">Available</span>
+                                {% else %}
+                                    <span class="badge badge-muted">Busy</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if n.is_available %}
+                                    <form method="post" action="{{ url_for('doctor_call_nurse', nurse_id=n.id) }}">
+                                        <button class="btn btn-primary btn-small" type="submit">Call</button>
+                                    </form>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

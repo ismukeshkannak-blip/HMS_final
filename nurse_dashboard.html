@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-layout">
+    <aside class="sidebar">
+        <a href="{{ url_for('nurse_dashboard', tab='profile') }}" class="nav-link {% if active_tab=='profile' %}active{% endif %}">Profile</a>
+        <a href="{{ url_for('nurse_dashboard', tab='notifications') }}" class="nav-link {% if active_tab=='notifications' %}active{% endif %}">Doctor Requests</a>
+        <a href="{{ url_for('nurse_dashboard', tab='inventory') }}" class="nav-link {% if active_tab=='inventory' %}active{% endif %}">Pharmacy Inventory</a>
+    </aside>
+    <section class="content">
+        {% if active_tab == 'profile' %}
+            <div class="card">
+                <h2>Nurse Profile</h2>
+                <div class="grid-2">
+                    <div><strong>Name:</strong> {{ nurse.full_name }}</div>
+                    <div><strong>Department:</strong> {{ nurse.department }}</div>
+                    <div><strong>Phone:</strong> {{ nurse.phone }}</div>
+                    <div><strong>Email:</strong> {{ nurse.email }}</div>
+                    <div><strong>Status:</strong>
+                        {% if nurse.is_available %}
+                            <span class="badge badge-success">Available</span>
+                        {% else %}
+                            <span class="badge badge-muted">Busy</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% elif active_tab == 'notifications' %}
+            <div class="card">
+                <h2>Doctor Requests</h2>
+                <p class="subtitle">You see pending or accepted calls assigned to you or unassigned.</p>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Doctor</th>
+                        <th>Status</th>
+                        <th>Time</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for call in calls %}
+                        <tr>
+                            <td>{{ call.doctor_name }}</td>
+                            <td>{{ call.status|capitalize }}</td>
+                            <td>{{ call.created_at }}</td>
+                            <td>
+                                {% if call.status == 'pending' and (call.nurse_id is none or call.nurse_id == nurse.id) %}
+                                    <form method="post" action="{{ url_for('nurse_accept_call', call_id=call.id) }}">
+                                        <button class="btn btn-primary btn-small" type="submit">Accept</button>
+                                    </form>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% elif active_tab == 'inventory' %}
+            <div class="card">
+                <h2>Pharmacy Inventory (Read-only)</h2>
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Drug</th>
+                        <th>Units Available</th>
+                        <th>Unit Price (₹)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in inventory %}
+                        <tr>
+                            <td>{{ item.drug_name }}</td>
+                            <td>{{ item.units_available }}</td>
+                            <td>{{ '%.2f'|format(item.unit_price) }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

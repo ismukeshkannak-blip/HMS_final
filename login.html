@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="auth-wrapper">
+    <div class="auth-card glass">
+        <h1 class="page-title"> PES University Hospital Management Login</h1>
+        <p class="subtitle">Sign in with your role-specific credentials.</p>
+        {% if error %}
+            <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+        <form method="post" class="form">
+            <label class="form-label">
+                <span>Username</span>
+                <input type="text" name="username" required>
+            </label>
+            <label class="form-label">
+                <span>Password</span>
+                <input type="password" name="password" required>
+            </label>
+            <label class="form-label">
+                <span>Role</span>
+                <select name="role" required>
+                    <option value="patient">Patient</option>
+                    <option value="doctor">Doctor</option>
+                    <option value="nurse">Nurse</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </label>
+            <button class="btn btn-primary full-width" type="submit">Login</button>
+        </form>
+        <div class="demo-note">
+            <strong>Demo users:</strong>
+            <ul>
+                <li>Patient → <code>patient1 / patient123</code></li>
+                <li>Doctor → <code>doctor1 / doctor123</code></li>
+                <li>Nurse → <code>nurse1 / nurse123</code></li>
+                <li>Admin → <code>admin1 / admin123</code></li>
+            </ul>
+        </div>
+    </div>
+</section>
+{% endblock %}
